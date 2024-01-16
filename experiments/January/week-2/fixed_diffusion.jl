@@ -54,7 +54,8 @@ work_precision_plot(
         adaptive=ADAPTIVE,
         abstols=abstols,
         reltols=reltols,
-        dts=dts
+        dts=dts,
+        colors = [1 1 1 2 2 2]
         )
         
 titles=["Log of absolute errors with confidence intervals (EK1, dt=0.01, FixedDiffusion)", "", "", ""];
