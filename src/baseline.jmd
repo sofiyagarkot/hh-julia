@@ -1,0 +1,74 @@
+# Baseline notebook
+
+```julia, results="hidden"
+using LinearAlgebra, Statistics, Distributions
+using DiffEqDevTools, SciMLBase, OrdinaryDiffEq, Plots, SimpleUnPack
+using ProbNumDiffEq
+using UnPack
+
+include("utils.jl") 
+
+Plots.theme(
+    :dao;
+    markerstrokewidth=0.5,
+    legend=:outertopright,
+    margin=5Plots.mm,
+    xticks=10.0 .^ (-16:1:16),
+    yticks=10.0 .^ (-6:1:5),
+)
+```
+
+1. Simplest method -- fixed steps and fixed diffusion
+a) comparing the solvers : EK0 and EK1 on IWP prior with different dimensions 
+
+```julia, results="hidden"
+SMOOTH = DENSE = false
+ADAPTIVE = false
+TO_SAVE = false
+
+# fixed diffusion
+DM = FixedDiffusion()
+
+# Comparing EK0 and EK1 errors
+algorithms = [
+    EK0(prior=IWP(2), smooth=SMOOTH, diffusionmodel=DM),
+    EK0(prior=IWP(3), smooth=SMOOTH, diffusionmodel=DM),
+    EK0(prior=IWP(4), smooth=SMOOTH, diffusionmodel=DM),
+    EK1(prior=IWP(2), smooth=SMOOTH, diffusionmodel=DM), 
+    EK1(prior=IWP(3), smooth=SMOOTH, diffusionmodel=DM), 
+    EK1(prior=IWP(4), smooth=SMOOTH, diffusionmodel=DM), 
+    ]
+
+names = [  
+    "EK0(2)", 
+    "EK0(3)",  
+    "EK0(4)",  
+    "EK1(2)", 
+    "EK1(3)", 
+    "EK1(4)", 
+    ]
+
+evaltspan = (0.0, 50.0)
+dts = 10.0 .^ range(-2, -3, length=10)[begin:end-1]
+abstols = reltols = repeat([missing], length(dts))
+
+work_precision_plot(
+    names, algorithms, prob; 
+    DENSE = DENSE, 
+    SAVE_EVERYSTEP = false, 
+    to_save=TO_SAVE, 
+    to_save_path="./visuals/January/diffusions/fixed_diffusion_wp_EK0_vs_EK1_IWP.png",
+    title="EK0 vs EK1, FixedDiffusion",
+    adaptive=ADAPTIVE,
+    abstols=abstols,
+    reltols=reltols,
+    dts=dts,
+    colors = [1 1 1 2 2 2]
+    )
+```
+
+b) Uncertainty plots of EK0 and EK1  
+
+```julia, results="hidden"
+
+```
