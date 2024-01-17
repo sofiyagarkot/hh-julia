@@ -339,8 +339,6 @@ function plot_solution_with_uncertainty(
                     title=titles[ch], legend=:topleft, label=labels[i], 
                     left_margin = [20mm 0mm], right_margin = [20mm 0mm])
             end
-                # scatter!(p, ts, m[:, ch], label = "Mean Solution")
-            # p2 = plot(ts, std[:, ch], xlabel = "t", ylabel = "u(t)", label = "$derivative derivative", title=title)
         end
     end
     if to_save
@@ -404,12 +402,20 @@ function work_precision_plot(
 
     )
 
-    p = plot(wp, title=title, color=colors)
+    p = plot(wp, title=title, legend=:best, legendfontsize=8)
 
     if to_save
         savefig(p, to_save_path)
     else
         display(p)
+    end
+
+
+    p2 = plot(wp, x=:nf, y=:final, legend=:best, legendfontsize=8)
+    if to_save
+        savefig(p2, "./visuals/sample_wp_nf.png")
+    else
+        display(p2)
     end
 end
 
@@ -493,3 +499,44 @@ function plot_2_work_precision_plots(
         display(p)
     end
 end
+
+
+
+using Distributions
+
+function sample_prior(m0::Array, C0::Array, ts::Array, A::Function, Q::Function)
+    sample = zeros(length(ts), d*(q+1))
+
+    sample[1, :] = rand(MvNormal(m0, C0))
+    
+    for i in 2:length(ts)
+        h = ts[i] - ts[i-1]
+        sample[i, :] = rand(MvNormal(A(h)*sample[i-1, :], Q(h)))
+    end
+    
+    return sample
+end
+
+
+function plot_sample(ts, sample, axes=nothing, derivative=0)
+
+    ylabels = ["V", "m", "n", "h"]
+    if axes === nothing
+        fig, axes = plot(layout = (4, 1), legendfont = font(7), size = (1000, 600))
+    end
+
+    E = (E0, E1, E2)[derivative+1]
+    Yi = sample * E'
+    
+    for j in 1:d
+        plot!(axes[j], ts, Yi[:, j], color=:auto)
+        ddt = derivative == 0 ? "" : "d^$derivative/dt^$derivative"
+        ylabel!(axes[j], ylabel = "$ddt$(ylabels[j])")
+        xlims!(axes[j], ts[1], ts[end])
+    end
+    
+    xlabel!(axes[end], "t")
+
+    return fig, axes
+end
+
