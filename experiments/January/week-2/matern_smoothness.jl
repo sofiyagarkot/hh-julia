@@ -1,4 +1,4 @@
-include("../../src/utils.jl")
+include("../../../src/utils.jl")
 SMOOTH = DENSE = false
 ADAPTIVE = true
 TO_SAVE = true
@@ -151,7 +151,7 @@ plot_log_errors(
 #                     to_save_path="./visuals/January/matern/wp_diagram-comparing-the-lengthscales.png",
 #                     title = "Comparison of different lengthscales of Matern prior (dimension=$dim)")
 
-titles = ["Log mean absolute error",         
+titles = ["Log mean absolute error, EK1(Matern(1, lengthscale))",         
           "", 
           "", 
           ""
@@ -159,24 +159,42 @@ titles = ["Log mean absolute error",
 xlabels =["", "", "", "lengthscale"]
 ylabels =["V", "m", "h", "n"]
 
+exponents = range(-4, stop=0, length=20)
 
-lengthscales = 1:8
+# Generate the log-spaced values
+lengthscales = 10 .^ exponents
+
+
+algorithms = []
+for l in lengthscales
+        push!(algorithms, EK1(prior=Matern(3, l), smooth=SMOOTH))
+end
+
+
+# lengthscales = 1:8
 p = plot(layout = (4, 1), legendfont = font(7), size = (1000, 600))
-for ch in 1:4
-        errors_ch = []
-        for i in 1:length(algorithms)
-                algorithm =  algorithms[i]
-                solution = solve(prob, algorithm, dense=false)
-                solutions = [solution]
-                errors = absolute_errors(solutions, prob)
-                errors = mean(errors[1][ch])
-                push!(errors_ch, errors)
-        end
 
+all_errors_ch = Dict()
+for i in 1:length(algorithms)
+        algorithm =  algorithms[i]
+        print("prior $(algorithm.prior) \n")
+        solution = solve(prob, algorithm, dense=false)
+        solutions = [solution]
+        errors = absolute_errors(solutions, prob)
+        for ch in 1:4
+                errors_channel = mean(errors[1][ch])
+                if !haskey(all_errors_ch, ch)
+                        all_errors_ch[ch] = [errors_channel]
+                else
+                        push!(all_errors_ch[ch], errors_channel)
+                end
+        end
+end
+for ch in 1:4
         plot!( 
                 p[ch],
                 lengthscales, 
-                log.(errors_ch),
+                log.(all_errors_ch[ch]),
                 legend=false,
                 ylabel = ylabels[ch], 
                 xlabel = xlabels[ch],
@@ -186,8 +204,10 @@ for ch in 1:4
                 legendfontsize=6,
                 )
 end
+
+
 TO_SAVE = true
-to_save_path = "./visuals/January/matern/log-abs-error-different-lengthscales-per-channel.png"
+to_save_path = "./visuals/January/matern/log-abs-error-different-lengthscales-per-channel0_1.png"
 if TO_SAVE
         savefig(p, to_save_path)
 else
