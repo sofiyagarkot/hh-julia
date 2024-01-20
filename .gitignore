@@ -1,2 +1,11 @@
+.DS_Store
 visuals/January/
 experiments/
+Manifest_mine.toml
+Project_mine.toml
+*.ipynb
+src/baseline.jmd
+src/hodkin-huxley-julia.jl
+hodgkinhuxley.jmd
+hodgkinhuxley__.jmd
+notes.jmd

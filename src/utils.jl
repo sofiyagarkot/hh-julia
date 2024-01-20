@@ -1,11 +1,13 @@
 using ProbNumDiffEq, ComponentArrays
 using UnPack
-# using ProbNum
+# using PlotlyJS, LaTeXStrings
 using Plots
 using OrdinaryDiffEq
 using Statistics, LinearAlgebra
 using Plots.PlotMeasures
+using Colors
 using DiffEqDevTools
+using Distributions
 
 Plots.theme(
     :dao;
@@ -202,7 +204,7 @@ function plot_errors(
 
     colors = 1:length(labels)
     ylabels = ["error (V), %", "error (m), %", "error (n), %", "error (h), %"]
-    p = plot(layout = (4, 1), legendfont = font(7), size = (1000, 600))
+    p = Plots.plot(layout = (4, 1), legendfont = font(7), size = (1000, 600))
     
     for i in 1:length(labels)
         for j in 1:4
@@ -223,7 +225,7 @@ function plot_errors(
     end
 
     if to_save
-        savefig(p, to_save_path)
+        Plots.savefig(p, to_save_path)
     else
         display(p)
     end
@@ -232,7 +234,7 @@ end
 function plot_log_errors(times::Array, errors::Array, labels::Array, titles::Array; stds = [], ribbon = true, to_save_path="./visuals/sample.png", to_save=false)
     colors = 1:length(labels)
     ylabels = ["V", "m", "n", "h"]
-    p = plot(layout = (4, 1), legendfont = font(7), size = (1000, 600))
+    p = Plots.plot(layout = (4, 1), legendfont = font(7), size = (1000, 600))
     
     for i in 1:length(labels)
         for j in 1:4
@@ -258,7 +260,7 @@ function plot_log_errors(times::Array, errors::Array, labels::Array, titles::Arr
     end
 
     if to_save
-        savefig(p, to_save_path)
+        Plots.savefig(p, to_save_path)
     else
         display(p)
     end
@@ -501,42 +503,48 @@ function plot_2_work_precision_plots(
 end
 
 
-
-using Distributions
-
-function sample_prior(m0::Array, C0::Array, ts::Array, A::Function, Q::Function)
+function sample_prior(m0::Vector{Float64}, C0::Matrix{Float64}, ts::Vector{Float64}, Ah::Matrix{Float64} , Qh::Matrix{Float64}, d :: Int64, q::Int64 )
     sample = zeros(length(ts), d*(q+1))
 
     sample[1, :] = rand(MvNormal(m0, C0))
     
     for i in 2:length(ts)
-        h = ts[i] - ts[i-1]
-        sample[i, :] = rand(MvNormal(A(h)*sample[i-1, :], Q(h)))
+        sample[i, :] = rand(MvNormal(Ah*sample[i-1, :], Matrix(Qh)))
     end
     
     return sample
 end
 
-
-function plot_sample(ts, sample, axes=nothing, derivative=0)
+function plot_sample(ts::Vector{Float64}, sample::Matrix{Float64}, E_all::Tuple, axes::Plots.Plot{Plots.GRBackend}, titles::Array, derivative::Int64, color::Int64; label="")
 
     ylabels = ["V", "m", "n", "h"]
-    if axes === nothing
-        fig, axes = plot(layout = (4, 1), legendfont = font(7), size = (1000, 600))
-    end
 
-    E = (E0, E1, E2)[derivative+1]
+    E = E_all[derivative+1]
     Yi = sample * E'
-    
-    for j in 1:d
-        plot!(axes[j], ts, Yi[:, j], color=:auto)
-        ddt = derivative == 0 ? "" : "d^$derivative/dt^$derivative"
-        ylabel!(axes[j], ylabel = "$ddt$(ylabels[j])")
-        xlims!(axes[j], ts[1], ts[end])
-    end
-    
-    xlabel!(axes[end], "t")
+    # color = parse(Colorant, "skyblue")
+    for j in 1:4
 
-    return fig, axes
+        # ddt = derivative == 0 ? "" : L"$\frac{{d^{derivative}}}{{dt^{derivative}}}$"
+        ddt = derivative == 0 ? "" : "d^$derivative/dt^$derivative"
+        if isempty(label)
+            
+            if j == 4
+                plot!(axes[j], ts, Yi[:, j], color=color, alpha = 0.5, label="",  legend=false, ylabel = "$ddt$(ylabels[j])", 
+                    title=titles[j], xlabel="t", left_margin = [20mm 0mm], right_margin = [20mm 0mm])
+            else 
+                plot!(axes[j], ts, Yi[:, j], color=color, alpha=0.5, legend=false, ylabel = "$ddt$(ylabels[j])", 
+                    title=titles[j],left_margin = [20mm 0mm], label="", right_margin = [20mm 0mm])
+            end
+        else
+            if j == 4
+                plot!(axes[j], ts, Yi[:, j], color=color, alpha = 0.5, label=label,legend=true, ylabel = "$ddt$(ylabels[j])", 
+                    title=titles[j], xlabel="t", left_margin = [20mm 0mm], right_margin = [20mm 0mm])
+            else 
+                plot!(axes[j], ts, Yi[:, j], color=color,legend=false, alpha=0.5, ylabel = "$ddt$(ylabels[j])", 
+                    title=titles[j],left_margin = [20mm 0mm], right_margin = [20mm 0mm])
+            end
+        end
+    end
+    return axes
 end
 
