@@ -1,197 +1,7 @@
+# experiments/January/week-2/fixed_diffusion.jl:
+using DifferentialEquations
+# using GeometricIntegratorsDiffEq
 include("utils.jl")
-SMOOTH = DENSE = false
-ADAPTIVE = false
-TO_SAVE = false
-
-# fixed diffusion
-DM = FixedDiffusion()
-
-# EK1 
-algorithms = [
-             EK1(prior=IWP(1), smooth=SMOOTH, diffusionmodel=DM),
-             EK1(prior=IWP(2), smooth=SMOOTH, diffusionmodel=DM),
-             EK1(prior=IWP(3), smooth=SMOOTH, diffusionmodel=DM), 
-             EK1(prior=IWP(4), smooth=SMOOTH, diffusionmodel=DM), 
-             ]
-
-names = [  
-        "IWP(1)", 
-        "IWP(2)", 
-        "IWP(3)", 
-        "IWP(4)", 
-        ]
-
-
-prob = define_problem()
-evaltspan = (0.0, 50.0)
-tstops = range(evaltspan..., length=5000)
-solutions = get_solutions(algorithms, prob; tstops=tstops, adaptive=ADAPTIVE, dense=DENSE)  
-
-std_bool=true
-# errors, stds = absolute_percentage_errors(solutions, prob, std_bool = std_bool)
-errors, stds = absolute_errors(solutions, prob, std_bool = std_bool)
-times = [sol_i.t for sol_i in solutions]
-
-titles=["Absolute error with confidence intervals (EK1, FixedDiffusion)", "", "", ""];
-
-plot_errors(
-        times, errors, names, titles; 
-        stds, 
-        to_save_path="./visuals/January/diffusions/absolute_errors/fixed_diffusions_errors_EK1.png", 
-        to_save=TO_SAVE
-        )
-        
-
-dts = 10.0 .^ range(-2, -7, length=11)[begin:end-1]
-abstols = reltols = repeat([missing], length(dts))
-work_precision_plot(
-        names, algorithms, prob; 
-        DENSE = DENSE, 
-        SAVE_EVERYSTEP = false, 
-        to_save=TO_SAVE, 
-        to_save_path="./visuals/January/diffusions/fixed_diffusion_wp_EK1_IWP.png",
-        title="EK1, FixedDiffusion",
-        adaptive=ADAPTIVE,
-        abstols=abstols,
-        reltols=reltols,
-        dts=dts,
-        colors = [1 2 3 4]
-        )
-        
-titles=["Log of absolute errors with confidence intervals (EK1, dt=0.01, FixedDiffusion)", "", "", ""];
-
-plot_log_errors(
-        times, errors, names, titles; 
-        stds, 
-        to_save_path="./visuals/January/diffusions/absolute_errors/log_fixed_diffusions_errors_EK1_ribbon.png", 
-        to_save=TO_SAVE
-        )
-
-plot_log_errors(
-    times, errors, names, titles; 
-    stds, 
-    to_save_path="./visuals/January/diffusions/absolute_errors/log_fixed_diffusions_errors_EK1.png", 
-    to_save=TO_SAVE,
-    ribbon = false
-    )
-
-# EK0 
-algorithms = [
-    EK0(prior=IWP(1), smooth=SMOOTH, diffusionmodel=DM),
-    EK0(prior=IWP(2), smooth=SMOOTH, diffusionmodel=DM),
-    EK0(prior=IWP(3), smooth=SMOOTH, diffusionmodel=DM), 
-    EK0(prior=IWP(4), smooth=SMOOTH, diffusionmodel=DM), 
-    ]
-
-names = [  
-"IWP(1)", 
-"IWP(2)", 
-"IWP(3)", 
-"IWP(4)", 
-]
-
-
-prob = define_problem()
-evaltspan = (0.0, 50.0)
-tstops = range(evaltspan..., length=5000)
-solutions = get_solutions(algorithms, prob; tstops=tstops, adaptive=ADAPTIVE, dense=DENSE)  
-
-std_bool=true
-# errors, stds = absolute_percentage_errors(solutions, prob, std_bool = std_bool)
-errors, stds = absolute_errors(solutions, prob, std_bool = std_bool)
-times = [sol_i.t for sol_i in solutions]
-
-titles=["Absolute error with confidence intervals (EK0, dt=0.01, FixedDiffusion)", "", "", ""];
-
-plot_errors(
-    times, errors, names, titles; 
-    stds, 
-    to_save_path="./visuals/January/diffusions/absolute_errors/fixed_diffusions_errors_EK0.png", 
-    to_save=TO_SAVE
-    )
-
-work_precision_plot(
-        names, algorithms, prob; 
-        DENSE = DENSE, 
-        SAVE_EVERYSTEP = false, 
-        to_save=TO_SAVE, 
-        to_save_path="./visuals/January/diffusions/fixed_diffusion_wp_EK0_IWP.png",
-        title="EK0, FixedDiffusion",
-        adaptive=ADAPTIVE,
-        abstols=abstols,
-        reltols=reltols,
-        dts=dts
-        )
-
-titles=["Log of absolute error with confidence intervals (EK0, dt=0.01, FixedDiffusion)", "", "", ""];
-
-plot_log_errors(
-    times, errors, names, titles; 
-    stds, 
-    to_save_path="./visuals/January/diffusions/absolute_errors/log_fixed_diffusions_errors_EK0_ribbon.png", 
-    to_save=TO_SAVE
-    )
-
-
-plot_log_errors(
-    times, errors, names, titles; 
-    stds, 
-    to_save_path="./visuals/January/diffusions/absolute_errors/log_fixed_diffusions_errors_EK0.png", 
-    to_save=TO_SAVE,
-    ribbon = false
-    )
-
-# Comparing EK0 and EK1 errors
-algorithms = [
-    EK0(prior=IWP(1), smooth=SMOOTH, diffusionmodel=DM),
-    EK0(prior=IWP(2), smooth=SMOOTH, diffusionmodel=DM),
-    EK0(prior=IWP(3), smooth=SMOOTH, diffusionmodel=DM),
-    EK0(prior=IWP(4), smooth=SMOOTH, diffusionmodel=DM),
-    EK1(prior=IWP(1), smooth=SMOOTH, diffusionmodel=DM), 
-    EK1(prior=IWP(2), smooth=SMOOTH, diffusionmodel=DM), 
-    EK1(prior=IWP(3), smooth=SMOOTH, diffusionmodel=DM), 
-    EK1(prior=IWP(4), smooth=SMOOTH, diffusionmodel=DM), 
-    ]
-
-names = [  
-    "EK0(1)", 
-    "EK0(2)", 
-    "EK0(3)",  
-    "EK0(4)",  
-    "EK1(1)", 
-    "EK1(2)", 
-    "EK1(3)", 
-    "EK1(4)", 
-    ]
-
-
-dts = 10.0 .^ range(-2, -6, length=10)[begin:end-1]
-abstols = reltols = repeat([missing], length(dts))
-
-
-work_precision_plot(
-    names, algorithms, prob; 
-    DENSE = DENSE, 
-    SAVE_EVERYSTEP = false, 
-    to_save=true, 
-    to_save_path="./visuals/January/diffusions/fixed_diffusion_wp_EK0_vs_EK1_IWP.png",
-    title="EK0 vs EK1, FixedDiffusion",
-    adaptive=ADAPTIVE,
-    abstols=abstols,
-    reltols=reltols,
-    dts=dts,
-    colors=[1 1 1 1 2 2 2 2 ]
-    )
-    
-
-
-# dts = exp10.(-1:-1:-5)
-# plot_errors_vs_dt(dts, prob, algorithms, names ; 
-#                 TO_SAVE=TO_SAVE, 
-#                 to_save_path="./visuals/January/diffusions/fixed_diffusion_errors_vs_dt.png",
-#                 dense=DENSE,
-#                 )
-#  _________________________________________________________________
 
 SMOOTH = DENSE = false
 ADAPTIVE = false
@@ -200,84 +10,111 @@ TO_SAVE = true
 # fixed diffusion
 DM = FixedDiffusion()
 
-# Comparing EK0 and EK1 errors
+# EK1  comparing to Exponential Euler, and (optionally) BackwardEuler
+
+c1 = colorant"lightblue"
+c2 = colorant"darkblue"
+colors = range(c1, stop=c2, length=4)
+push!(colors, colorant"darkorange")
+
 algorithms = [
-    # EK0(prior=IWP(2), smooth=SMOOTH, diffusionmodel=DM),
-    EK0(prior=IWP(3), smooth=SMOOTH, diffusionmodel=DM),
-    # EK0(prior=IWP(4), smooth=SMOOTH, diffusionmodel=DM),
-    # EK1(prior=IWP(2), smooth=SMOOTH, diffusionmodel=DM), 
-    EK1(prior=IWP(3), smooth=SMOOTH, diffusionmodel=DM), 
-    # EK1(prior=IWP(4), smooth=SMOOTH, diffusionmodel=DM), 
-    ]
+             EK1(prior=IWP(1), smooth=SMOOTH, diffusionmodel=DM),
+             EK1(prior=IWP(2), smooth=SMOOTH, diffusionmodel=DM),
+             EK1(prior=IWP(3), smooth=SMOOTH, diffusionmodel=DM), 
+             EK1(prior=IWP(4), smooth=SMOOTH, diffusionmodel=DM), 
+             LawsonEuler(krylov = true, m = 50),   # https://docs.sciml.ai/DiffEqDocs/stable/solvers/split_ode_solve/#Semilinear-ODE 
+            #  GIImplicitEuler(),
+             ]
+
 
 names = [  
-    # "EK0(2)", 
-    "EK0(3)",  
-    # "EK0(4)",  
-    # "EK1(2)", 
-    "EK1(3)", 
-    # "EK1(4)", 
-    ]
+        "IWP(1)", 
+        "IWP(2)", 
+        "IWP(3)", 
+        "IWP(4)",
+        "Exponential Euler",
+        # "Implicit Euler",
+        ]
 
-evaltspan = (0.0, 50.0)
-dts = 10.0 .^ range(-2, -3, length=10)[begin:end-1]
-abstols = reltols = repeat([missing], length(dts))
 
+prob = define_problem()
 evaltspan = (0.0, 50.0)
 tstops = range(evaltspan..., length=5000)
-solutions = get_solutions(algorithms, prob; tstops=tstops, adaptive=ADAPTIVE, dense=DENSE)  
 
-std_bool=true
-# errors, stds = absolute_percentage_errors(solutions, prob, std_bool = std_bool)
-errors, stds = absolute_errors(solutions, prob, std_bool = std_bool)
-times = [sol_i.t for sol_i in solutions]
+solutions = get_solutions(algorithms[1:length(algorithms)-1], prob; tstops=tstops, adaptive=ADAPTIVE, dense=DENSE) 
+solution_euler = solve(prob, algorithms[end], dt=0.01, saveat=tstops)
+push!(solutions, solution_euler)
 
-# work_precision_plot(
-#     names, algorithms, prob; 
-#     DENSE = DENSE, 
-#     SAVE_EVERYSTEP = false, 
-#     to_save=TO_SAVE, 
-#     to_save_path="./visuals/January/diffusions/fixed_diffusion_wp_EK0_vs_EK1_IWP.png",
-#     title="EK0 vs EK1, FixedDiffusion",
-#     adaptive=ADAPTIVE,
-#     abstols=abstols,
-#     reltols=reltols,
-#     dts=dts,
-#     colors = [1 1 1 2 2 2]
-#     )
+errors, stds = absolute_errors(solutions, prob)
+errors_prob = errors[1:length(errors)-1]
+error_euler =  errors[length(errors)]
+times = [sol_i.t for sol_i in solutions[1:length(errors)-1]]
 
-titles = ["Log absolute error with log uncertainty (1 std)", "", "", ""]
-plot_log_errors(
-    times, errors, names, titles; 
+# Absolute errors
+titles=["Absolute error with confidence intervals (EK1, FixedDiffusion)", "", "", ""];
+
+p = plot_errors(
+    [solution_euler.t], [error_euler], 
+    ["Exponential Euler"], titles;
+    colors=[colors[end]],
+    to_save_path="./visuals/baseline/absolute_errors_in_time.png",
+    to_save=TO_SAVE)
+   
+plot_errors(
+    times, errors_prob, names[1:length(algorithms)-1], titles; 
     stds, 
-    to_save_path="./visuals/January/diffusions/absolute_errors/log_fixed_diffusions_errors_EK0-EK1_ribbon.png", 
-    to_save=true
+    to_save_path="./visuals/baseline/absolute_errors_in_time.png", 
+    to_save=TO_SAVE,
+    p = p, 
+    colors=colors[1:length(errors)-1]
     )
 
 
-ch = 1
-evaltspan = (0.0, 50.1)
-ts = range(evaltspan..., length=5000)
-derivative = 1
-# plot_solution_with_uncertainty( solutions[2], ch, 0, "EK0(3) Voltage", ts=ts, to_save =false, to_save_path="./visuals/January/diffusions/solution-fixed_diffusion_EK0(3)_voltage.png")
-# plot_solution_with_uncertainty( solutions[5], ch, 0, "EK1(3) Voltage", ts=ts, to_save =false, to_save_path="./visuals/January/diffusions/solution-fixed_diffusion_EK1(3)_voltage.png")
-titles= ["Comparing the solutions,"*" $derivative derivative", "", "", ""]
-plot_solution_with_uncertainty(
-    solutions, derivative, titles, names;
-     ts = ts,
-     to_save=true,
-     to_save_path="./visuals/January/diffusions/solution-fixed_diffusion_1st_derivative_EK0-EK1_voltage.png"
-     )
-     
-ch = 1
-evaltspan = (0.0, 56.1)
-ts = range(evaltspan..., length=5000)
-derivative = 1
-titles = ["Log std for Fixed Diffusion,"*" $derivative derivative", "", "", ""]
-plot_solution_with_uncertainty(
-    solutions, derivative, titles, names;
-        ts = ts,
-        log_std=true,
-        to_save=true,
-        to_save_path="./visuals/January/diffusions/log_std-fixed_diffusion_1st_EK0-EK1_voltage.png"
+# Log absolute errors
+titles=["Log of absolute errors (EK1, dt=0.01, FixedDiffusion)", "", "", ""];
+
+p = plot_errors(
+        times, errors_prob, names[1:length(algorithms)-1], titles; 
+        stds, 
+        to_save_path="./visuals/baseline/log_absolute_errors_in_time.png", 
+        to_save=TO_SAVE,
+        log_plot = true,
+        colors=colors[1:length(errors)-1]
         )
+
+plot_errors(
+    [solution_euler.t], [error_euler], 
+    ["Exponential Euler"], titles;
+    colors=[colors[end]],
+    to_save_path="./visuals/baseline/log_absolute_errors_in_time.png",
+    p = p, 
+    log_plot = true,
+    to_save=TO_SAVE)
+
+
+# Work-Precision plots
+
+dts = 10.0 .^ range(-2, -7, length=11)[begin:end-1]
+abstols = reltols = repeat([missing], length(dts))
+
+
+plots = work_precision_plot(
+        names, algorithms, prob; 
+        DENSE = DENSE, 
+        SAVE_EVERYSTEP = false, 
+        to_save=TO_SAVE, 
+        to_save_path="./visuals/baseline/fixed_diffusion_wp_EK1_IWP.png",
+        to_save_path2 = "./visuals/baseline/fixed_diffusion_steps_number_wp_EK1_IWP.png",
+        title="EK1, dt = 0.01, FixedDiffusion",
+        adaptive=ADAPTIVE,
+        abstols=abstols,
+        reltols=reltols,
+        dts=dts,
+        colors = colors
+        )
+
+using Plots
+to_save_path="./visuals/baseline/fixed_diffusion_wp_EK1_IWP.png"
+to_save_path2 = "./visuals/baseline/fixed_diffusion_steps_number_wp_EK1_IWP.png"
+Plots.savefig(plots[1], to_save_path)
+Plots.savefig(plots[2], to_save_path2)

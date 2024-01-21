@@ -8,40 +8,42 @@ As a probabilistic baseline I chose an EK1 solver with fixed steps and fixed dif
 
 In the most popular packages [NEURON — backward Euler with ∆t=0.025 ms, CSIM — Exponential Euler ? , GENESIS - Exponential Euler with ∆t=0.01] the HH ODE is solved with Exponential Euler method with the step size 0.01.
 
-- [ ] EK1 different orders — WP diagram with different number of evaluations, also including RK(…)
-- [ ] Mean absolute error during the simulation time for EK1( IWP(1…4) )
+![wp-ek1-fixed-diffusion](./visuals/baseline/fixed_diffusion_wp_EK1_IWP.png) 
+![wp-ek1-fixed-diffusion-step](visuals/baseline/fixed_diffusion_steps_number_wp_EK1_IWP.png)
+
+![abs-error-in-time](visuals/baseline/absolute_errors_in_time.png)
+- [ ] change the color scheme on WP diagrams
 - [ ] Maybe? include comparison with EK0
-- [ ] Also maybe? WP diagram with time vs error but that one will show more kind of efficacy of implementation of EK1
 
 ## 1. The first aspect that I’ll study is how choosing a different prior (Matern or IOUP) effects the solution (putting the same prior on all the dimensions of an ODE).
 ! the num_derivatives = 3, ∆t = 0.01, FixedDiffusion model throughout all the experiments
 
   - ### Integrated Ornstein-Uhlenbeck process (IOUP)
-      - [] describe paramterization of prior 
-      - [] one visual on how does this look like
+      - [ ] describe paramterization of prior 
+      - [ ] one visual on how does this look like
  
     How does total MAE depends on the choice of parameters
-      - [] plot showing for IOUP(num_derivatives = 3) the effect of rate parameter on total MAE; as a red dashed line put the performance of the IWP(3);
-      - [] given the optimal parameters — plot the prior and pick a suboptimal parametrization and plot priors for them too; initializing with the stationary distribution ! ; discuss the effect
+      - [ ] plot showing for IOUP(num_derivatives = 3) the effect of rate parameter on total MAE; as a red dashed line put the performance of the IWP(3);
+      - [ ] given the optimal parameters — plot the prior and pick a suboptimal parametrization and plot priors for them too; initializing with the stationary distribution ! ; discuss the effect
 
     How do the parameters influence the speed/accuracy
-    - [] given the optimal and suboptimal parameters, compare on WP diagrams the performance error vs time (or time vs error) relative to each other and IWP(3)   
+    - [ ] given the optimal and suboptimal parameters, compare on WP diagrams the performance error vs time (or time vs error) relative to each other and IWP(3)   
 
  
   - ### Matern prior
-      - [] decribe parametrization
-      - [] one visual on how does this prior look like
+      - [ ] decribe parametrization
+      - [ ] one visual on how does this prior look like
 
     How does total MAE depends on the choice of parameters
-      - [] plot showing the effect of lengthscale on the same total MAE; as a red dashed line put the performance of the IWP(3)
-      - [] same suboptimal vs. optimal plots (in the terms of resulting in smaller MAE)
+      - [ ] plot showing the effect of lengthscale on the same total MAE; as a red dashed line put the performance of the IWP(3)
+      - [ ] same suboptimal vs. optimal plots (in the terms of resulting in smaller MAE)
         
     How do the parameters influence the speed/accuracy
-    - [] given the optimal and suboptimal parameters, compare on WP diagrams the performance error vs time (or time vs error) relative to each other and IWP(3)   
+    - [ ] given the optimal and suboptimal parameters, compare on WP diagrams the performance error vs time (or time vs error) relative to each other and IWP(3)   
 
   - ### Comparing the Matern, IOUP and IWP with optimal parameters between each other
-    - [] WP diagram
-    - [] comparing the mean absolute errors across the whole simulation
+    - [ ] WP diagram
+    - [ ] comparing the mean absolute errors across the whole simulation
 
 ## 2. How does combination of priors influences the solution? 
 

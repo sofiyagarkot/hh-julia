@@ -1,7 +1,7 @@
 # TODO: initialize with static distribution, 
 # TODO: make plots for several lengthscale params as 4x4 grid
 
-include("../utils.jl")
+include("utils.jl")
 using Plots
 using LinearAlgebra
 SMOOTH = DENSE = false
