@@ -12,8 +12,6 @@ In the most popular packages [NEURON — backward Euler with ∆t=0.025 ms, CSIM
 ![wp-ek1-fixed-diffusion-step](visuals/baseline/fixed_diffusion_steps_number_wp_EK1_IWP.png)
 
 ![abs-error-in-time](visuals/baseline/absolute_errors_in_time.png)
-- [ ] change the color scheme on WP diagrams
-- [ ] Maybe? include comparison with EK0
 
 ## 1. The first aspect that I’ll study is how choosing a different prior (Matern or IOUP) effects the solution (putting the same prior on all the dimensions of an ODE).
 ! the num_derivatives = 3, ∆t = 0.01, FixedDiffusion model throughout all the experiments
