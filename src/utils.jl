@@ -77,34 +77,6 @@ function define_problem(duration = 50.0)
     return prob
 end
 
-function absolute_percentage_errors(solutions::Vector, prob::ODEProblem; baseline=Vern9(), std_bool=false)
-    all_errors = []
-    all_stds = []
-    for i in 1:length(solutions)
-        errors = []
-        stds  = []
-        sol = solutions[i]
-        reference = solve(prob, baseline, abstol=1e-9, reltol=1e-9, saveat=sol.t)
-        for ch in range(1, 4)
-            ref_ = reduce(hcat, reference.u)[ch, :]
-            sol_ = reduce(hcat, mean.(sol.pu))[ch, :]
-            errors_ = abs.((sol_ .- ref_) ./ ref_)
-            if std_bool
-                sol_std = reduce(hcat, std.(sol.pu))[ch, :]
-                push!(stds, sol_std)
-            end
-            push!(errors, errors_)
-        end
-        push!(all_errors, errors)
-        if std_bool
-            push!(all_stds, stds)
-        end
-    end
-    if std_bool
-        return all_errors, all_stds
-    end
-    return all_errors
-end
 
 function absolute_errors(solutions::Vector, prob::ODEProblem; baseline=Vern9())
     """
@@ -232,22 +204,22 @@ function plot_errors(
             if !isempty(stds)
 
                 if log_plot
-                    plot!(p[j], times[i], log.(errors[i][j]), xlabel = xlabel; 
+                    plot!(p[j], times[i], log.(errors[i][j]), xlabel = xlabels[j]; 
                             label = labels[i], color = colors[i], ylabel = ylabels[j], 
                             title=titles[j], legend = legends[j], left_margin = [20mm 0mm], 
                             right_margin = [20mm 0mm])
 
-                    plot!(p[j], times[i], log.(stds[i][j]), linestyle=:dash, xlabel = xlabel; 
+                    plot!(p[j], times[i], log.(stds[i][j]), linestyle=:dash, xlabel = xlabels[j]; 
                             label = labels[i]*" std", color = colors[i], ylabel = ylabels[j], 
                             title=titles[j], legend = legends[j], left_margin = [20mm 0mm], 
                             right_margin = [20mm 0mm])
                 else
-                    plot!(p[j], times[i], errors[i][j], xlabel = xlabels[j], ribbon = 3stds[i][j], 
+                    plot!(p[j], times[i], log.(errors[i][j]), xlabel = xlabels[j], ribbon = 3stds[i][j], 
                                 fillalpha=0.2; label = labels[i], color = colors[i], ylabel = ylabels[j], 
                                 title=titles[j], legend = legends[j], left_margin = [20mm 0mm], right_margin = [20mm 0mm])
                 end
             else
-                plot!(p[j], times[i], errors[i][j], xlabel = xlabels[j]; 
+                plot!(p[j], times[i], log.(errors[i][j]), xlabel = xlabels[j]; 
                             label = labels[i], color = colors[i], ylabel = ylabels[j], title=titles[j], 
                             legend = legends[j], left_margin = [20mm 0mm], right_margin = [20mm 0mm])
             end
@@ -261,49 +233,6 @@ function plot_errors(
     end
     return p
 end
-
-function plot_log_errors(
-        times::Array, errors::Array, 
-        labels::Array, titles::Array; 
-        stds = [], ribbon = true, 
-        to_save_path="./visuals/sample.png",
-        colors = 1:length(labels)
-        to_save=false)
-
-    ylabels = ["V", "m", "n", "h"]
-    p = Plots.plot(layout = (4, 1), legendfont = font(7), size = (1000, 600))
-    
-    for i in 1:length(labels)
-        for j in 1:4
-            if j < 4
-                legend=false
-                xlabel = ""
-            else
-                legend=true
-                xlabel = "t"
-            end
-                
-            if !isempty(stds)
-                if ribbon
-                    plot!(p[j], times[i], log.(errors[i][j]), ribbon = 3log.(stds[i][j]), fillalpha=0.2, xlabel = xlabel; label = labels[i], color = colors[i], ylabel = ylabels[j], title=titles[j], legend = legend, left_margin = [20mm 0mm], right_margin = [20mm 0mm])
-                else
-                    plot!(p[j], times[i], log.(errors[i][j]), xlabel = xlabel; label = labels[i], color = colors[i], ylabel = ylabels[j], title=titles[j], legend = legend, left_margin = [20mm 0mm], right_margin = [20mm 0mm])
-                    plot!(p[j], times[i], log.(stds[i][j]), linestyle=:dash, xlabel = xlabel; label = labels[i]*" std", color = colors[i], ylabel = ylabels[j], title=titles[j], legend = legend, left_margin = [20mm 0mm], right_margin = [20mm 0mm])
-                end
-            else
-                plot!(p[j], times[i], log.(errors[i][j]), xlabel = xlabel; label = labels[i], color = colors[i], ylabel = ylabels[j], title=titles[j], legend = legend, left_margin = [20mm 0mm], right_margin = [20mm 0mm])
-            end
-        end
-    end
-
-    if to_save
-        Plots.savefig(p, to_save_path)
-    else
-        display(p)
-    end
-end
-
-
 
 
 function get_solutions(algorithms::Array, prob::ODEProblem; kwargs...)
@@ -402,6 +331,7 @@ function work_precision_plot(
                             title = "Dynamic diffusion",
                             colors = [],
                             dts=[],
+                            error_estimate = :l∞,
                             kwargs...
                             )
     _setups = []
@@ -437,12 +367,13 @@ function work_precision_plot(
         dense = DENSE,
         save_everystep = SAVE_EVERYSTEP,
         maxiters = Int(1e7),
+        error_estimate = error_estimate,
         numruns = 5,
         kwargs...
 
     )
 
-    p = plot(wp, title=title, legend=:best, legendfontsize=8)
+    p = plot(wp, title=title, color=colors, legend=:best, legendfontsize=8)
 
     if to_save
         savefig(p, to_save_path)
@@ -450,8 +381,7 @@ function work_precision_plot(
         display(p)
     end
 
-
-    p2 = plot(wp, x=:nf, y=:final, legend=:best, legendfontsize=8)
+    p2 = plot(wp, x=:dts, y=:l∞, color=colors, title = title, legend=:best, legendfontsize=8)
     if to_save
         savefig(p2, to_save_path2)
     else

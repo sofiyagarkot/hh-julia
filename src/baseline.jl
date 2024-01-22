@@ -74,22 +74,22 @@ plot_errors(
 titles=["Log of absolute errors (EK1, dt=0.01, FixedDiffusion)", "", "", ""];
 
 p = plot_errors(
+    [solution_euler.t], [error_euler], 
+    ["Exponential Euler"], titles;
+    colors=[colors[end]],
+    to_save_path="./visuals/baseline/log_absolute_errors_in_time.png",
+    log_plot = true,
+    to_save=TO_SAVE)
+
+plot_errors(
         times, errors_prob, names[1:length(algorithms)-1], titles; 
         stds, 
         to_save_path="./visuals/baseline/log_absolute_errors_in_time.png", 
         to_save=TO_SAVE,
         log_plot = true,
+        p = p, 
         colors=colors[1:length(errors)-1]
         )
-
-plot_errors(
-    [solution_euler.t], [error_euler], 
-    ["Exponential Euler"], titles;
-    colors=[colors[end]],
-    to_save_path="./visuals/baseline/log_absolute_errors_in_time.png",
-    p = p, 
-    log_plot = true,
-    to_save=TO_SAVE)
 
 
 # Work-Precision plots
@@ -97,12 +97,17 @@ plot_errors(
 dts = 10.0 .^ range(-2, -7, length=11)[begin:end-1]
 abstols = reltols = repeat([missing], length(dts))
 
+function total_abs_error(sol::AbstractArray, timeseries_analytic::AbstractArray)
+    return sum(vecvecapply((x) -> abs.(x), sol - timeseries_analytic))
+end
+
+
 
 plots = work_precision_plot(
         names, algorithms, prob; 
         DENSE = DENSE, 
         SAVE_EVERYSTEP = false, 
-        to_save=TO_SAVE, 
+        to_save=true, 
         to_save_path="./visuals/baseline/fixed_diffusion_wp_EK1_IWP.png",
         to_save_path2 = "./visuals/baseline/fixed_diffusion_steps_number_wp_EK1_IWP.png",
         title="EK1, dt = 0.01, FixedDiffusion",
@@ -110,11 +115,8 @@ plots = work_precision_plot(
         abstols=abstols,
         reltols=reltols,
         dts=dts,
-        colors = colors
+        error_estimate = :l∞,
+        colors = colors'
         )
 
-using Plots
-to_save_path="./visuals/baseline/fixed_diffusion_wp_EK1_IWP.png"
-to_save_path2 = "./visuals/baseline/fixed_diffusion_steps_number_wp_EK1_IWP.png"
-Plots.savefig(plots[1], to_save_path)
-Plots.savefig(plots[2], to_save_path2)
+
