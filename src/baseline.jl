@@ -51,7 +51,7 @@ error_euler =  errors[length(errors)]
 times = [sol_i.t for sol_i in solutions[1:length(errors)-1]]
 
 # Absolute errors
-titles=["Absolute error with confidence intervals (EK1, FixedDiffusion)", "", "", ""];
+titles=["Absolute error with confidence intervals (EK1, dt=0.01, FixedDiffusion)", "", "", ""];
 
 p = plot_errors(
     [solution_euler.t], [error_euler], 
@@ -110,7 +110,7 @@ plots = work_precision_plot(
         to_save=true, 
         to_save_path="./visuals/baseline/fixed_diffusion_wp_EK1_IWP.png",
         to_save_path2 = "./visuals/baseline/fixed_diffusion_steps_number_wp_EK1_IWP.png",
-        title="EK1, dt = 0.01, FixedDiffusion",
+        title="EK1, FixedDiffusion",
         adaptive=ADAPTIVE,
         abstols=abstols,
         reltols=reltols,
@@ -118,5 +118,8 @@ plots = work_precision_plot(
         error_estimate = :l∞,
         colors = colors'
         )
+
+
+
 
 

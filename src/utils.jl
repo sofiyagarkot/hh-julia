@@ -475,7 +475,7 @@ end
 
 function sample_prior(m0::Vector{Float64}, C0::Matrix{Float64}, ts::Vector{Float64}, Ah::Matrix{Float64} , Qh::Matrix{Float64}, d :: Int64, q::Int64 )
     sample = zeros(length(ts), d*(q+1))
-
+    print(typeof(rand(MvNormal(m0, C0))), "\n", "shapr", size(rand(MvNormal(m0, C0))))
     sample[1, :] = rand(MvNormal(m0, C0))
     
     for i in 2:length(ts)
@@ -485,14 +485,17 @@ function sample_prior(m0::Vector{Float64}, C0::Matrix{Float64}, ts::Vector{Float
     return sample
 end
 
-function plot_sample(ts::Vector{Float64}, sample::Matrix{Float64}, E_all::Tuple, axes::Plots.Plot{Plots.GRBackend}, titles::Array, derivative::Int64, color::Int64; label="")
+function plot_sample(
+        ts::Vector{Float64}, sample::Matrix{Float64}, 
+        E_all::Tuple, axes::Plots.Plot{Plots.GRBackend}, titles::Array, 
+        derivative::Int64, color::Int64, dimension::Int64; label="")
 
     ylabels = ["V", "m", "n", "h"]
 
     E = E_all[derivative+1]
     Yi = sample * E'
     # color = parse(Colorant, "skyblue")
-    for j in 1:4
+    for j in 1:dimension
 
         # ddt = derivative == 0 ? "" : L"$\frac{{d^{derivative}}}{{dt^{derivative}}}$"
         ddt = derivative == 0 ? "" : "d^$derivative/dt^$derivative"

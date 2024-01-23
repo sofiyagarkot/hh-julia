@@ -18,7 +18,8 @@ In the most popular packages [NEURON — backward Euler with ∆t=0.025 ms, CSIM
 
   - ### Integrated Ornstein-Uhlenbeck process (IOUP)
       - [ ] describe paramterization of prior 
-      - [ ] one visual on how does this look like
+      - [ ] the initial distribution for both are still m=0 and sigma = 1, find a way t initialize with a stationary one later 
+      ![IOUP-rates](visuals/IOUP/IOUP-priors-rates.png)
  
     How does total MAE depends on the choice of parameters
       - [ ] plot showing for IOUP(num_derivatives = 3) the effect of rate parameter on total MAE; as a red dashed line put the performance of the IWP(3);
@@ -30,7 +31,7 @@ In the most popular packages [NEURON — backward Euler with ∆t=0.025 ms, CSIM
  
   - ### Matern prior
       - [ ] decribe parametrization
-      - [ ] one visual on how does this prior look like
+      ![Matern-lengthscales](visuals/Matern/Matern-priors-lengthscales.png)
 
     How does total MAE depends on the choice of parameters
       - [ ] plot showing the effect of lengthscale on the same total MAE; as a red dashed line put the performance of the IWP(3)

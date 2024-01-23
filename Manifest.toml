@@ -1543,6 +1543,18 @@ git-tree-sha1 = "d76cec8007ec123c2b681269d40f94b053473fcf"
 uuid = "9b3f67b0-2d00-526e-9884-9e4938f8fb88"
 version = "0.2.7"
 
+[[deps.LinearMaps]]
+deps = ["LinearAlgebra"]
+git-tree-sha1 = "9df2ab050ffefe870a09c7b6afdb0cde381703f2"
+uuid = "7a12625a-238d-50fd-b39a-03d52299707e"
+version = "3.11.1"
+weakdeps = ["ChainRulesCore", "SparseArrays", "Statistics"]
+
+    [deps.LinearMaps.extensions]
+    LinearMapsChainRulesCoreExt = "ChainRulesCore"
+    LinearMapsSparseArraysExt = "SparseArrays"
+    LinearMapsStatisticsExt = "Statistics"
+
 [[deps.LinearSolve]]
 deps = ["ArrayInterface", "ConcreteStructs", "DocStringExtensions", "EnumX", "FastLapackInterface", "GPUArraysCore", "InteractiveUtils", "KLU", "Krylov", "Libdl", "LinearAlgebra", "MKL_jll", "PrecompileTools", "Preferences", "RecursiveFactorization", "Reexport", "SciMLBase", "SciMLOperators", "Setfield", "SparseArrays", "Sparspak", "StaticArraysCore", "UnPack"]
 git-tree-sha1 = "6f8e084deabe3189416c4e505b1c53e1b590cae8"
@@ -1697,6 +1709,12 @@ deps = ["AbstractTrees", "Automa", "DataStructures", "FreeTypeAbstraction", "Geo
 git-tree-sha1 = "96ca8a313eb6437db5ffe946c457a401bbb8ce1d"
 uuid = "0a4f8689-d25c-4efe-a92b-7142dfc1aa53"
 version = "0.5.7"
+
+[[deps.MatrixEquations]]
+deps = ["LinearAlgebra", "LinearMaps"]
+git-tree-sha1 = "f765b4eda3ea9be8e644b9127809ca5151f3d9ea"
+uuid = "99c1a7ee-ab34-5fd5-8076-27c950a045f4"
+version = "2.4.2"
 
 [[deps.MatrixFactorizations]]
 deps = ["ArrayLayouts", "LinearAlgebra", "Printf", "Random"]
@@ -2220,10 +2238,10 @@ deps = ["Unicode"]
 uuid = "de0858da-6303-5e67-8744-51eddeeeb8d7"
 
 [[deps.ProbNumDiffEq]]
-deps = ["ArrayAllocators", "DiffEqBase", "ExponentialUtilities", "FastBroadcast", "FastGaussQuadrature", "FillArrays", "FiniteHorizonGramians", "ForwardDiff", "FunctionWrappersWrappers", "GaussianDistributions", "Kronecker", "LinearAlgebra", "Octavian", "OrdinaryDiffEq", "PSDMatrices", "PrecompileTools", "RecursiveArrayTools", "Reexport", "SciMLBase", "SimpleUnPack", "SpecialMatrices", "StaticArrayInterface", "Statistics", "StructArrays", "TaylorIntegration", "TaylorSeries", "ToeplitzMatrices"]
-path = "/Users/sofiyagarkot/.julia/dev/ProbNumDiffEq"
+deps = ["ArrayAllocators", "DiffEqBase", "ExponentialUtilities", "FastBroadcast", "FastGaussQuadrature", "FillArrays", "FiniteHorizonGramians", "ForwardDiff", "FunctionWrappersWrappers", "GaussianDistributions", "Kronecker", "LinearAlgebra", "MatrixEquations", "Octavian", "OrdinaryDiffEq", "PSDMatrices", "PrecompileTools", "RecursiveArrayTools", "Reexport", "SciMLBase", "SimpleUnPack", "SpecialMatrices", "StaticArrayInterface", "Statistics", "StructArrays", "TaylorIntegration", "TaylorSeries", "ToeplitzMatrices"]
+git-tree-sha1 = "1d4a7410c03c21dcf7d6dae260c7779a0ebd3455"
 uuid = "bf3e78b0-7d74-48a5-b855-9609533b56a5"
-version = "0.13.1"
+version = "0.14.0"
 weakdeps = ["DiffEqDevTools", "RecipesBase"]
 
     [deps.ProbNumDiffEq.extensions]

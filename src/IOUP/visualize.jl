@@ -2,94 +2,101 @@ include("../utils.jl")
 using Plots
 using LinearAlgebra
 
-# TODO: initialize with static distribution, 
-# TODO: make plots for several rate params as 4x4 grid
+evaltspan = (0.0, 5.0)
+tstops = range(evaltspan..., length=500)
 
+l1= -25
+l2 = -0.1
+l3= 0.1
+l4 = 25 
+n_derivatives = 3
 
-SMOOTH = DENSE = false
-ADAPTIVE = true
-TO_SAVE = true
-
-
-prob = define_problem()
-
-l = -3
-d = 4     # dimension of ODE , V, m , n , h   
 names = [
-        "IOUP(1, $l)"
-        "IOUP(2, $l)"
-        "IOUP(3, $l)"
-        "IOUP(4, $l)"
+        "IOUP($n_derivatives, $l1)"
+        "IOUP($n_derivatives, $l2)"
+        "IOUP($n_derivatives, $l3)"
+        "IOUP($n_derivatives, $l4)"
         ]
 
-algorithms = [
-    # EK1(prior=IOUP(n_derivatives, l, update_rate_parameter=false) 
-    EK1(prior=IOUP(d, 1, l,)),
-    EK1(prior=IOUP(d, 2, l,)),
-    EK1(prior=IOUP(d, 3, l,)),
-    EK1(prior=IOUP(d, 4, l,)),
-    ]
-
-dt = 0.01
-derivative = 1
-uElType = Float64
-path_to_save = "./visuals/January/plots_of_priors/IOUP/$derivative-derivative-l-$l-orders.png"
-colors = (1:length(algorithms))
+priors = [
+        IOUP(n_derivatives, l1),
+        IOUP(n_derivatives, l2),
+        IOUP(n_derivatives, l3),
+        IOUP(n_derivatives, l4),
+        ]
 
 
-axes = Plots.plot(layout = (4, 1), legendfont = font(7), size = (1000, 600))
-Qhs = [] 
-for i in 1:length(algorithms)
-
-    alg = algorithms[i] 
+to_plot= []
+for i in 1:length(priors)
+    prior = priors[i]
     name = names[i]
-    color = colors[i]
-
-    prior = alg.prior
-    q = prior.num_derivatives
-
-    Ah, Qh = ProbNumDiffEq.discretize(prior, dt)
-    m_Qh = Matrix(Qh)
-    m_Ah = Matrix(Ah)
-    
-
-    E0 = ProbNumDiffEq.projection(d, q)(0)
-    if q > 2
-        E1 = ProbNumDiffEq.projection(d, q)(1)
-        E2 = ProbNumDiffEq.projection(d, q)(2)
-        E = (E0, E1, E2)
-    elseif q > 1
-        E1 = ProbNumDiffEq.projection(d, q)(1)
-        E = (E0, E1)
-    else
-        E = Tuple(E0)
-    end
-
-
-    # Initial mean and covariance
-    m0 = zeros(d * (q + 1))
-    C0 = float(Matrix(I, d * (q + 1), d * (q + 1)))
-
-    tspan = (0.0, 5.0)
-    ts = collect(range(tspan..., length=500))
-
-    Ys = sample_prior(m0, C0, ts, m_Ah, m_Qh, d, q)
-
-    titles = ["Samples from IOUP(l=-3)", "", "", ""]
-    for _ in 1:10
-        Ys = sample_prior(m0, C0, ts, m_Ah, m_Qh, d, q)
-        axes = plot_sample(ts, Ys, E, axes, titles, derivative, color; label="")
-    end
-    axes = plot_sample(ts, Ys, E, axes, titles, derivative, color; label=name)
-    
+    push!(to_plot, plot(prior, tstops; title=names[i], ylabel="", ylims=(-20,20)))
 end
 
-display(axes)
-TO_SAVE = true
-if TO_SAVE
-    Plots.savefig(axes, path_to_save)
-else
-    display(axes)
-end
+plot(to_plot...)
+savefig("./visuals/IOUP/IOUP-priors-rates.png")
+
+# TODO: initialize with stationary distribution 
+# TODO: make plots for 1st derivative
+
+# derivative = 1
+# dt= 0.01
+
+# axes = Plots.plot(layout = (4, 1), legendfont = font(7), size = (1000, 600))
+
+# for i in 1:length(algorithms)
+
+#     alg = algorithms[i] 
+#     name = names[i]
+#     color = colors[i]
+
+#     prior = alg.prior
+#     q = prior.num_derivatives
+
+#     Ah, Qh = ProbNumDiffEq.discretize(prior, dt)
+#     m_Qh = Matrix(Qh)
+#     m_Ah = Matrix(Ah)
+    
+
+#     E0 = ProbNumDiffEq.projection(d, q)(0)
+#     if q > 2
+#         E1 = ProbNumDiffEq.projection(d, q)(1)
+#         E2 = ProbNumDiffEq.projection(d, q)(2)
+#         E = (E0, E1, E2)
+#     elseif q > 1
+#         E1 = ProbNumDiffEq.projection(d, q)(1)
+#         E = (E0, E1)
+#     else
+#         E = Tuple(E0)
+#     end
+
+
+#     # Initial mean and covariance
+#     initial = ProbNumDiffEq.initial_distribution(prior)
+
+#     m0 = mean(initial)
+#     C0 = Matrix(Diagonal(var(initial)))
+
+#     tspan = (0.0, 50.0)
+#     ts = collect(range(tspan..., length=5000))
+
+#     Ys = sample_prior(m0, C0, ts, m_Ah, m_Qh, d, q)
+
+#     titles = ["Samples from IOUP(l=-3)", "", "", ""]
+#     for _ in 1:10
+#         Ys = sample_prior(m0, C0, ts, m_Ah, m_Qh, d, q)
+#         axes = plot_sample(ts, Ys, E, axes, titles, derivative, color, d; label="")
+#     end
+#     axes = plot_sample(ts, Ys, E, axes, titles, derivative, color,d; label=name)
+    
+# end
+
+# display(axes)
+
+# if TO_SAVE
+#     Plots.savefig(axes, path_to_save)
+# else
+#     display(axes)
+# end
 
 
