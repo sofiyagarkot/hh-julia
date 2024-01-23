@@ -36,6 +36,50 @@ end
 plot(to_plot...)
 savefig("./visuals/IOUP/IOUP-priors-rates.png")
 
+
+
+l1= 10^1.5
+l2 = 10^0.85
+l3 = 10^1.15
+n_derivatives = 3
+
+
+
+priors = [
+        IOUP(n_derivatives, l1),
+        IOUP(n_derivatives, l2),
+        IOUP(n_derivatives, l3),
+        IWP(n_derivatives),
+        ]
+
+l1 = round(Int64, l1)
+l2 = round(Int64, l2)
+l3 = round(Int64, l3)
+names = [
+        "IOUP($n_derivatives, $l1) - Equivalent loss to IWP"
+        "IOUP($n_derivatives, $l2) -- min_1"
+        "IOUP($n_derivatives, $l3) -- min_2"
+        "IWP($n_derivatives)"
+        ]
+
+ylims_ = [
+        (-10^10,10^10),
+        (-10^8,10^8),
+        (-10^10,10^10),
+        (-10,10),
+        ]
+to_plot= []
+for i in 1:length(priors)
+    prior = priors[i]
+    name = names[i]
+    push!(to_plot, plot(prior, tstops; title=names[i], ylabel="", ylims=ylims_[i]))
+end
+
+plot(to_plot...)
+
+savefig("./visuals/IOUP/IOUP-comparison-IWP.png")
+
+
 # TODO: initialize with stationary distribution 
 # TODO: make plots for 1st derivative
 

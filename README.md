@@ -22,7 +22,10 @@ In the most popular packages [NEURON — backward Euler with ∆t=0.025 ms, CSIM
       ![IOUP-rates](visuals/IOUP/IOUP-priors-rates.png)
  
     How does total MAE depends on the choice of parameters
-      - [ ] plot showing for IOUP(num_derivatives = 3) the effect of rate parameter on total MAE; as a red dashed line put the performance of the IWP(3);
+      
+      ![IOUP-rates](visuals/IOUP/rate-vs-total-abs-error-neg-pos.png)
+      ![IOUP-rates](visuals/IOUP/log-rate-vs-total-abs-error-pos.png)
+ 
       - [ ] given the optimal parameters — plot the prior and pick a suboptimal parametrization and plot priors for them too; initializing with the stationary distribution ! ; discuss the effect
 
     How do the parameters influence the speed/accuracy
@@ -31,7 +34,9 @@ In the most popular packages [NEURON — backward Euler with ∆t=0.025 ms, CSIM
  
   - ### Matern prior
       - [ ] decribe parametrization
-      ![Matern-lengthscales](visuals/Matern/Matern-priors-lengthscales.png)
+      ![Matern-lengthscales-all](visuals/Matern/log-lengthscale-vs-total-abs-error-all.png)
+
+      ![Matern-lengthscales](visuals/Matern/log-lengthscale-vs-total-abs-error.png)
 
     How does total MAE depends on the choice of parameters
       - [ ] plot showing the effect of lengthscale on the same total MAE; as a red dashed line put the performance of the IWP(3)
@@ -48,6 +53,11 @@ In the most popular packages [NEURON — backward Euler with ∆t=0.025 ms, CSIM
 
 ## 3. How does transforming the priors before entering the ODE influences the solution? 
 
+
+
+## General 
+
+- [ ] mean absolute error vs. total absolute error vs mean squared error
 
 [NEURON] — Carnevale, N.T. and Hines, M.L. (2006) The Neuron Book. Cambridge University Press, Cambridge, UK. http://dx.doi.org/10.1017/CBO9780511541612
 

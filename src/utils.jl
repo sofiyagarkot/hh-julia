@@ -75,7 +75,7 @@ function define_problem(duration = 50.0)
 end
 
 
-function absolute_errors(solutions::Vector, prob::ODEProblem; baseline=Vern9())
+function absolute_erros(solutions::Vector, prob::ODEProblem; baseline=Vern9())
     """
     Returns the absolute errors of the solutions a
     """
