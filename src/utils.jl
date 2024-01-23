@@ -45,17 +45,14 @@ function define_problem(duration = 50.0)
     gleak = 0.1
     V0 = -70
 
-    I(t::ProbNumDiffEq.Taylor1) = zero(t)
-    I(t::ProbNumDiffEq.TaylorN) = zero(t)
-
-    I(t::Float64) = (0 <= t <= duration) ? 500one(t) : zero(t)
+    I(t) = (0 <= t <= duration) ? 500one(t) : zero(t)
 
     function f(du, u, params, t)
         V, m, n, h = u
 
         @unpack gNa, gK = params
 
-        I_inj = I(t) * 1e-6
+        I_inj = 500*1e-6
 
         du[2] = dmdt = (αm(V, VT) * (1 - m) - βm(V, VT) * m)
         du[3] = dndt = (αn(V, VT) * (1 - n) - βn(V, VT) * n)
