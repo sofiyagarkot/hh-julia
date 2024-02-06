@@ -57,7 +57,7 @@ for i in 1:length(algorithms)
         # tstops = range(evaltspan..., length=Int(round(evaltspan[end]/dt, digits = 0)))
         # print("tstops: ", tstops, "\n")
         solution = solve(prob, algorithm, dt=dt, dense = false)
-        reference = solve(prob, Vern9(), abstol=1e-9, reltol=1e-9, saveat=solution.t)
+        reference = solve(prob, Vern9(), abstol=1e-9, reltol=1e-9)
         error = l2(solution.u, reference(solution.t))
         push!(errors, error)
     
@@ -82,4 +82,4 @@ plot!(p, xaxis=:log10, yaxis=:log10,
         ylabel="L2 error")
 p
 
-# savefig(p, "./visuals/my-wp-diagram.png")
+savefig(p, "./visuals/my-wp-diagram.png")
