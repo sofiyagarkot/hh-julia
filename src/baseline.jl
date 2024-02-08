@@ -1,125 +1,103 @@
-# experiments/January/week-2/fixed_diffusion.jl:
-using DifferentialEquations
-# using GeometricIntegratorsDiffEq
+using RecursiveArrayTools
 include("utils.jl")
+using  LaTeXStrings
 
-SMOOTH = DENSE = false
+dts = 10.0 .^ range(-1, -5, length=11)[1:end-1]
+evaltspan = (0.0, 50.0)
+
+DENSE = SMOOTH = TO_SAVE = false
 ADAPTIVE = false
-TO_SAVE = true
+SAVE_EVERYSTEP = false
 
-# fixed diffusion
 DM = FixedDiffusion()
 
-# EK1  comparing to Exponential Euler, and (optionally) BackwardEuler
+_setups = [
+    "Tsit5" => Dict(:alg => Tsit5())
+    # "Vern7" => Dict(:alg => Vern7())
+    "RK4" => Dict(:alg=>RK4())
+    "Implicit Euler" => Dict(:alg=>ImplicitEuler())
+    "Exponential Euler" => Dict(:alg=>LawsonEuler(krylov = true, m = 50)) # on krylov and m : https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/ 
+    "EK1(1)" => Dict(:alg=>EK1(order=1, smooth=DENSE, diffusionmodel=DM))
+    "EK1(2)" => Dict(:alg=>EK1(order=2, smooth=DENSE, diffusionmodel=DM))
+    "EK1(3)" => Dict(:alg=>EK1(order=3, smooth=DENSE, diffusionmodel=DM))
+    "EK1(4)" => Dict(:alg=>EK1(order=4, smooth=DENSE, diffusionmodel=DM))
+    ]
+    
+labels = first.(_setups)
+setups = last.(_setups)
+
+# COLORS
+colors = [colorant"yellow"]
+push!(colors, colorant"darkorange")
+push!(colors, colorant"red2")
+push!(colors, colorant"darkred")
 
 c1 = colorant"lightblue"
 c2 = colorant"darkblue"
-colors = range(c1, stop=c2, length=4)
-push!(colors, colorant"darkorange")
+colors2 = range(c1, stop=c2, length=4)
 
-algorithms = [
-             EK1(prior=IWP(1), smooth=SMOOTH, diffusionmodel=DM),
-             EK1(prior=IWP(2), smooth=SMOOTH, diffusionmodel=DM),
-             EK1(prior=IWP(3), smooth=SMOOTH, diffusionmodel=DM), 
-             EK1(prior=IWP(4), smooth=SMOOTH, diffusionmodel=DM), 
-             LawsonEuler(krylov = true, m = 50),   # https://docs.sciml.ai/DiffEqDocs/stable/solvers/split_ode_solve/#Semilinear-ODE 
-            #  GIImplicitEuler(),
-             ]
-
-
-names = [  
-        "IWP(1)", 
-        "IWP(2)", 
-        "IWP(3)", 
-        "IWP(4)",
-        "Exponential Euler",
-        # "Implicit Euler",
-        ]
-
-
-prob = define_problem()
-evaltspan = (0.0, 50.0)
-tstops = range(evaltspan..., length=5000)
-
-solutions = get_solutions(algorithms[1:length(algorithms)-1], prob; tstops=tstops, adaptive=ADAPTIVE, dense=DENSE) 
-solution_euler = solve(prob, algorithms[end], dt=0.01, saveat=tstops)
-push!(solutions, solution_euler)
-
-errors, stds = absolute_errors(solutions, prob)
-errors_prob = errors[1:length(errors)-1]
-error_euler =  errors[length(errors)]
-times = [sol_i.t for sol_i in solutions[1:length(errors)-1]]
-
-# Absolute errors
-titles=["Absolute error with confidence intervals (EK1, dt=0.01, FixedDiffusion)", "", "", ""];
-
-p = plot_errors(
-    [solution_euler.t], [error_euler], 
-    ["Exponential Euler"], titles;
-    colors=[colors[end]],
-    to_save_path="./visuals/baseline/absolute_errors_in_time.png",
-    to_save=TO_SAVE)
-   
-plot_errors(
-    times, errors_prob, names[1:length(algorithms)-1], titles; 
-    stds, 
-    to_save_path="./visuals/baseline/absolute_errors_in_time.png", 
-    to_save=TO_SAVE,
-    p = p, 
-    colors=colors[1:length(errors)-1]
-    )
-
-
-# Log absolute errors
-titles=["Log of absolute errors (EK1, dt=0.01, FixedDiffusion)", "", "", ""];
-
-p = plot_errors(
-    [solution_euler.t], [error_euler], 
-    ["Exponential Euler"], titles;
-    colors=[colors[end]],
-    to_save_path="./visuals/baseline/log_absolute_errors_in_time.png",
-    log_plot = true,
-    to_save=TO_SAVE)
-
-plot_errors(
-        times, errors_prob, names[1:length(algorithms)-1], titles; 
-        stds, 
-        to_save_path="./visuals/baseline/log_absolute_errors_in_time.png", 
-        to_save=TO_SAVE,
-        log_plot = true,
-        p = p, 
-        colors=colors[1:length(errors)-1]
-        )
-
-
-# Work-Precision plots
-
-dts = 10.0 .^ range(-2, -7, length=11)[begin:end-1]
-abstols = reltols = repeat([missing], length(dts))
-
-function total_abs_error(sol::AbstractArray, timeseries_analytic::AbstractArray)
-    return sum(vecvecapply((x) -> abs.(x), sol - timeseries_analytic))
+for c in colors2
+    push!(colors, c)
 end
 
+# L2 loss from https://github.com/SciML/DiffEqDevTools.jl/blob/master/src/test_solution.jl 
+function l2(sol, analytic)
+    return sqrt(recursive_mean(vecvecapply((x) -> float(x) .^ 2,
+                                                      sol - analytic)))
+end
+
+prob = define_problem()
 
 
-plots = work_precision_plot(
-        names, algorithms, prob; 
-        DENSE = DENSE, 
-        SAVE_EVERYSTEP = false, 
-        to_save=true, 
-        to_save_path="./visuals/baseline/fixed_diffusion_wp_EK1_IWP.png",
-        to_save_path2 = "./visuals/baseline/fixed_diffusion_steps_number_wp_EK1_IWP.png",
-        title="EK1, FixedDiffusion",
-        adaptive=ADAPTIVE,
-        abstols=abstols,
-        reltols=reltols,
-        dts=dts,
-        error_estimate = :l∞,
-        colors = colors'
-        )
+algorithms = [setup[:alg] for setup in setups]
 
+p = plot(legendfont = font(7), size = (500, 400))
 
+for i in 1:length(algorithms)
+    print("i: ", i, "\n")
+    algorithm = algorithms[i]
+    errors = []
 
+    for dt in dts
+        print("dt", dt, "\n")
+        # tstops = range(evaltspan..., length=Int(round(evaltspan[end]/dt, digits = 0)))
+        # print("tstops: ", tstops, "\n")
+        try
+            solution = solve(prob, algorithm, dt=dt, adaptive=false, dense = false)
+        catch e
+            print("error: ", e, "\n")
+            push!(errors, NaN)
+            continue
 
+        else            
+            solution = solve(prob, algorithm, dt=dt, adaptive=false, dense = false)
 
+            # print("solution: ", solution, "\n")
+
+            reference = solve(prob, Vern9(), abstol=1e-9, reltol=1e-9)
+            error = l2(solution.u, reference(solution.t))
+            push!(errors, error)
+        end
+    
+    end
+    
+    plot!(p, dts, errors, label=labels[i], 
+        framestyle=:axes,
+        xaxis=:log10, yaxis=:log10,
+        color=colors[i],
+        fg_legend = :transparent)
+
+    scatter!(p, dts, errors, label="", 
+        framestyle=:axes,
+        xaxis=:log10, yaxis=:log10,
+        color=colors[i],
+        fg_legend = :transparent)
+    display(p)
+end
+
+plot!(p, xaxis=:log10, yaxis=:log10, 
+        legend=:bottomright, xlabel=L"$\Delta$t", 
+        ylabel="L2 error")
+p
+
+# savefig(p, "./visuals/my-wp-diagram.png")
