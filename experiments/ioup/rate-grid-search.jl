@@ -32,8 +32,6 @@ for i in 1:length(algorithms)
         try
                 solution = solve(prob, algorithm, tstops=tstops, adaptive=ADAPTIVE, dense=DENSE)
         catch e
-                print("prior", algorithm.prior, "\n")
-                print("Error ", e, "\n")
                 push!(all_errors, NaN)
                 continue
         else
@@ -68,9 +66,6 @@ hline!(
         ylabel = "tRMSE", 
         xlabel = xlabel,
         title="",
-        left_margin = [20mm 0mm], 
-        right_margin = [20mm 0mm],
-        bottom_margin = [5mm 0mm],
         legend=:outerright,
         framestyle=:axes,
         fg_legend = :transparent
@@ -87,7 +82,6 @@ plot!(
         right_margin = [20mm 0mm],
         bottom_margin = [5mm 0mm],
         legend=:outerright,
-        # yticks=[],
         color = "black",
         framestyle=:axes,
         fg_legend = :transparent,
@@ -109,11 +103,8 @@ scatter!(
 
 )
 
-
-display(p)
-
-path = "./visuals/IOUP-rate.png"
+path = "./visuals/ioup/rate-grid-search.png"
 savefig(p, path)
 
-print("Minimal error of IOUP(3, rate) at rate $(rates[min_error_index]) is $(min_error)\n")
-print("Error of IWP(3) is $error_IWP\n")
+# print("Minimal error of IOUP(3, rate) at rate $(rates[min_error_index]) is $(min_error)\n")
+# print("Error of IWP(3) is $error_IWP\n")

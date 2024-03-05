@@ -6,10 +6,10 @@ ADAPTIVE = false
 TO_SAVE = false
 
 # Colors
-ioup_prior_color = "purple2"
-ioup_transformed_prior_color = "green"
+ioup_prior_color = "purple4"
+ioup_transformed_prior_color = "green3"
 iwp_prior_color = "black"
-iwp_transformed_prior_color = "olivedrab1"
+iwp_transformed_prior_color = "darkgreen"
 
 # fixed diffusion
 DM = FixedDiffusion()
@@ -39,7 +39,7 @@ for i in 1:length(algorithms)
         algorithm =  algorithms[i]
 
         try
-                solution = solve(prob, algorithm, tstops=tstops, adaptive=ADAPTIVE, dense=DENSE)
+                solution = solve(prob, algorithm, dt=0.01, adaptive=ADAPTIVE, dense=DENSE)
         catch e
                 push!(all_errors, NaN)
                 continue
@@ -69,8 +69,8 @@ hline!(
         p,
         [error_IWP],
         linestyle=:dash, linecolor=iwp_prior_color,
-        label = "IWP(3)",
-        ylabel = "L2 loss", 
+        label = "IWP",
+        ylabel = "tRMSE", 
         xlabel = xlabel,
         title="",
         left_margin = [20mm 0mm], 
@@ -85,8 +85,8 @@ plot!(
         p,
         rates, 
         all_errors,
-        label = "IOUP(3, rate)",
-        ylabel = "L2 loss", 
+        label = "IOUP(rate)",
+        ylabel = "tRMSE", 
         xlabel = xlabel,
         title="",
         left_margin = [20mm 0mm], 
@@ -99,50 +99,23 @@ plot!(
         fg_legend = :transparent,
         )
 
+prob_transformed, forward_transforms, deriv_forward_transforms, inverse_transforms, ode_func = generate_transformed_settings_V()
 
-# defining inverse and forward transforms
-identity =  x -> 1*x
-deriv_logit = x -> ForwardDiff.derivative(logit, x)
-deriv_identity = x -> ForwardDiff.derivative(identity, x)
-
-forward_transforms = [identity, logit, logit, logit]
-deriv_forward_transforms = [deriv_identity, deriv_logit, deriv_logit, deriv_logit]
-inverse_transforms = [identity, sigmoid, sigmoid, sigmoid]
-
-# defining the problem
-ode_func, u0, tspan, params = define_problem_and_parameters()
-
-# transformed initial value problem
-u0s_transformed = []
-for i in 1:length(forward_transforms)
-    forward_transform = forward_transforms[i]
-    u0_transformed = forward_transform(u0[i])
-    if isa(u0_transformed,  Taylor1{Float64})
-        u0_transformed = inv_u(0)
-    end
-    push!(u0s_transformed, u0_transformed)
-end
-u0s_transformed = float.(u0s_transformed)
-
-prob_transformed = ODEProblem(transformed_ode, u0s_transformed, evaltspan, params)
 
 all_errors_t = []
 for i in 1:length(algorithms)
         algorithm =  algorithms[i]
 
         try
-                solution = solve(prob_transformed, algorithm, tstops=tstops, adaptive=ADAPTIVE, dense=DENSE)
-        catch e
-                push!(all_errors_t, NaN)
-                continue
-        else
-                solution = solve(prob_transformed, algorithm, tstops=tstops, adaptive=ADAPTIVE, dense=DENSE)
-
-                reference = solve(prob, Vern9(), abstol=1e-9, reltol=1e-9, saveat=solution.t)
+                solution_transformed = solve(prob_transformed, algorithm, dt=0.01, adaptive=ADAPTIVE, dense=DENSE)
+                reference = solve(prob, Vern9(), abstol=1e-9, reltol=1e-9, saveat=solution_transformed.t)
                 
                 # error = l2_transformed(hcat(solution.u...), reference(solution.t), inverse_transforms)
                 error = l2_transformed(solution_transformed, reference, inverse_transforms)
                 push!(all_errors_t, error)
+        catch e
+                push!(all_errors_t, NaN)
+                continue
         end
 end
 
@@ -152,9 +125,9 @@ plot!(
         p,
         rates, 
         all_errors_t,
-        label = "Transformed IOUP(3, rate)",
-        ylabel = "L2 loss", 
-        guidefont=font(11, "Computer Modern"),
+        label = "Transformed IOUP(rate)",
+        ylabel = "tRMSE", 
+        # guidefont=font(11, "Computer Modern"),
         xlabel = xlabel,
         title="",
         left_margin = [20mm 0mm], 
@@ -177,8 +150,8 @@ hline!(
         [error_iwp_t],
         linestyle=:dash, 
         linecolor=iwp_transformed_prior_color,
-        label = "transformed IWP(3)",
-        ylabel = "L2 loss", 
+        label = "Transformed IWP(3)",
+        ylabel = "tRMSE", 
         xlabel = xlabel,
         title="",
         left_margin = [20mm 0mm], 
@@ -189,9 +162,16 @@ hline!(
         fg_legend = :transparent
         )
 
+
+plot!(p,  yaxis=:log10, 
+        # legend=:bottomright,
+         xlabel="rate", 
+        ylabel="L2 error",
+        dpi=600)
 display(p)
 
-path = "./visuals/IOUP-rate-and-transformed.png"
+# path = "./visuals/IOUP-rate-and-transformed.png"
+path = "./visuals/essay/IOUP-rate-and-transformed.png"
 savefig(p, path)
 
 

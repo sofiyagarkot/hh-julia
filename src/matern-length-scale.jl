@@ -15,7 +15,7 @@ tstops = range(evaltspan..., length=5000)
 exponents = range(-6, stop=5, length=150)
 lengthscales = 10 .^ exponents
 
-matern_prior_color = "pale violetred2"
+matern_prior_color = "red2"
 
 algorithms = []
 n_derivatives = 3
@@ -60,8 +60,8 @@ hline!(
         p,
         [error_IWP],
         linestyle=:dash, linecolor=:black,
-        label = "IWP(3)",
-        ylabel = "L2 loss", 
+        label = "IWP",
+        ylabel = "tRMSE", 
         xlabel = xlabel,
         title="",
         left_margin = [20mm 0mm], 
@@ -75,8 +75,8 @@ plot!(
         p,
         lengthscales[.!isnan.(all_errors)], 
         all_errors[.!isnan.(all_errors)],
-        label = "Matern(3, rate)",
-        ylabel = "L2 loss", 
+        label = "Matern(length scale)",
+        ylabel = "tRMSE", 
         xlabel = xlabel,
         title="",
         xaxis=:log10,
@@ -88,7 +88,9 @@ plot!(
         color = matern_prior_color,
         framestyle=:axes,
         fg_legend = :transparent,
-        ylimits = (-3.0, 32.1)
+        # ylimits = (-3.0, 32.1),
+        yaxis=:log10,
+        dpi=600
         )
 
 # scatter!(
@@ -107,13 +109,22 @@ plot!(
 
 display(p)
 
-path = "./visuals/Matern-lengthscale.png"
+
+function find_first_min(array)
+        min_value = minimum(array[.!isnan.(array)])
+        return findfirst(x -> x == min_value, array)
+end
+print("Length scale:", find_first_min(all_errors))
+# Length scale:139
+
+
+path = "./visuals/Matern-lengthscale-RMSE.png"
 savefig(p, path)
 
-min_error = minimum(all_errors[.!isnan.(all_errors)])
-min_error_index = argmin(all_errors[.!isnan.(all_errors)])
-print("Minimum error of the Matern prior is $(min_error) at length scale $(lengthscales[min_error_index])\n")
-print("The error made by a solver with IWP prior is $(error_IWP)\n")
+# min_error = minimum(all_errors[.!isnan.(all_errors)])
+# min_error_index = argmin(all_errors[.!isnan.(all_errors)])
+# print("Minimum error of the Matern prior is $(min_error) at length scale $(lengthscales[min_error_index])\n")
+# print("The error made by a solver with IWP prior is $(error_IWP)\n")
 
 # Minimum error of the Matern prior is 0.11957508022607141 at length scale 366.23377139033727
 # The error made by a solver with IWP prior is 0.11957161493488402

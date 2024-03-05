@@ -1,9 +1,9 @@
-include("utils.jl")
+include("../../src/utils.jl")
+
 SMOOTH = DENSE = false
 ADAPTIVE = false
 TO_SAVE = false
 
-ioup_prior_color = "purple4"
 # fixed diffusion
 DM = FixedDiffusion()
 
@@ -11,16 +11,16 @@ prob = define_problem()
 evaltspan = (0.0, 50.0)
 tstops = range(evaltspan..., length=5000)
 
-# exponents = range(0, stop=40, length=30)
-# rates = -10 .^ exponents
-# rates = vcat(rates, -rates)
-# rates = sort(rates)
-rates = range(-30, stop=30, length=50)
+# Generate the log-spaced values for rate 
+exponents = range(-6, stop=5, length=150)
+lengthscales = 10 .^ exponents
+
+matern_prior_color = "red2"
 
 algorithms = []
 n_derivatives = 3
-for l in rates
-        push!(algorithms, EK1(prior=IOUP(n_derivatives, l, update_rate_parameter=false), smooth=SMOOTH, diffusionmodel=DM))
+for l in lengthscales
+        push!(algorithms, EK1(prior=Matern(n_derivatives, l), smooth=SMOOTH, diffusionmodel=DM))
 end
 
 all_errors = []
@@ -32,8 +32,6 @@ for i in 1:length(algorithms)
         try
                 solution = solve(prob, algorithm, tstops=tstops, adaptive=ADAPTIVE, dense=DENSE)
         catch e
-                print("prior", algorithm.prior, "\n")
-                print("Error ", e, "\n")
                 push!(all_errors, NaN)
                 continue
         else
@@ -46,19 +44,16 @@ for i in 1:length(algorithms)
         end
 end
 
-min_error = minimum(all_errors[.!isnan.(all_errors)])
-min_error_index = argmin(all_errors[.!isnan.(all_errors)])
-
 solution_IWP = solve(prob, EK1(prior=IWP(n_derivatives), smooth=SMOOTH, diffusionmodel=DM), tstops=tstops, adaptive=ADAPTIVE, dense=DENSE)
 reference = solve(prob, Vern9(), abstol=1e-9, reltol=1e-9, saveat=solution_IWP.t)
 
 error_IWP = l2(solution_IWP.u, reference(solution_IWP.t))
 
 
-
+# plotting the length scale vs Matern error
 p = plot(layout=(1,1), legendfont = font(7), size = (800, 180))
 
-xlabel = "rate"
+xlabel = "length scale"
 
 hline!( 
         p,
@@ -70,50 +65,47 @@ hline!(
         title="",
         left_margin = [20mm 0mm], 
         right_margin = [20mm 0mm],
-        bottom_margin = [5mm 0mm],
+        bottom_margin = [10mm 0mm],
         legend=:outerright,
         framestyle=:axes,
         fg_legend = :transparent
         )
 plot!( 
         p,
-        rates[.!isnan.(all_errors)], 
+        lengthscales[.!isnan.(all_errors)], 
         all_errors[.!isnan.(all_errors)],
-        label = "IOUP(rate)",
+        label = "Matern(length scale)",
         ylabel = "tRMSE", 
         xlabel = xlabel,
         title="",
+        xaxis=:log10,
         left_margin = [20mm 0mm], 
         right_margin = [20mm 0mm],
-        bottom_margin = [5mm 0mm],
+        bottom_margin = [10mm 0mm],
         legend=:outerright,
-        # yticks=[],
-        color = "black",
+        color = matern_prior_color,
         framestyle=:axes,
         fg_legend = :transparent,
         yaxis=:log10,
+        dpi=600
         )
 
-scatter!(
-        p, 
-        [rates[min_error_index]],
-        [min_error],
-        label="minimum, rate=$(round(rates[min_error_index], digits=1))",
-        left_margin = [20mm 0mm], 
-        color = ioup_prior_color,
-        right_margin = [20mm 0mm],
-        mshape=:circle,
-        markersize=3,
-        yaxis=:log10,
-        dpi=600
-
-)
-
-
-display(p)
-
-path = "./visuals/IOUP-rate.png"
+path = "./visuals/Matern-lengthscale-RMSE.png"
 savefig(p, path)
 
-print("Minimal error of IOUP(3, rate) at rate $(rates[min_error_index]) is $(min_error)\n")
-print("Error of IWP(3) is $error_IWP\n")
+
+# function find_first_min(array)
+#     min_value = minimum(array[.!isnan.(array)])
+#     return findfirst(x -> x == min_value, array)
+# end
+
+# print("Length scale:", find_first_min(all_errors))
+# Length scale:139
+
+# min_error = minimum(all_errors[.!isnan.(all_errors)])
+# min_error_index = argmin(all_errors[.!isnan.(all_errors)])
+# print("Minimum error of the Matern prior is $(min_error) at length scale $(lengthscales[min_error_index])\n")
+# print("The error made by a solver with IWP prior is $(error_IWP)\n")
+
+# Minimum error of the Matern prior is 0.11957508022607141 at length scale 366.23377139033727
+# The error made by a solver with IWP prior is 0.11957161493488402

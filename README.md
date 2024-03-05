@@ -26,10 +26,10 @@ In the most popular packages [NEURON — backward Euler with ∆t=0.025 ms, CSIM
       ![IOUP-rates](visuals/IOUP/rate-vs-total-abs-error-neg-pos.png)
       ![IOUP-rates](visuals/IOUP/log-rate-vs-total-abs-error-pos.png)
  
-      - [ ] given the optimal parameters — plot the prior and pick a suboptimal parametrization and plot priors for them too; initializing with the stationary distribution ! ; discuss the effect
+      - [x] given the optimal parameters — plot the prior and pick a suboptimal parametrization and plot priors for them too; initializing with the stationary distribution ! ; discuss the effect
 
     How do the parameters influence the speed/accuracy
-    - [ ] given the optimal and suboptimal parameters, compare on WP diagrams the performance error vs time (or time vs error) relative to each other and IWP(3)   
+    - [x] given the optimal and suboptimal parameters, compare on WP diagrams the performance error vs time (or time vs error) relative to each other and IWP(3)   
 
  
   - ### Matern prior

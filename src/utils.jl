@@ -7,6 +7,8 @@ using Colors
 using DiffEqDevTools
 using Distributions
 using ForwardDiff
+using TaylorSeries
+using RecursiveArrayTools
 
 Plots.theme(
     :dao;
@@ -94,6 +96,18 @@ function logit(y, slope=1.0, x_offset=0.0, y_offset=0.0)
     return log((y - y_offset) / (1 - y + y_offset)) / slope + x_offset
 end
 
+function sigmoid_V(x, slope = 0.05, x_offset = 0.0, y_offset = -110.0, scale=170)
+    return scale / (1 + exp(-slope * (x - x_offset))) + y_offset
+end
+
+function inverse_sigmoid_V(y, slope = 0.05, x_offset = 0.0, y_offset = -110.0, scale=170)
+    return (-1/slope)*log( (scale)/(y - y_offset) - 1) + x_offset
+end
+
+# function inverse_sigmoid_V(y, slope = 100.0, x_offset = 0.0, y_offset = -110.0, scale=170)
+#     return (1/slope)*log( -(y-y_offset)/(y - (scale + y_offset) )) + x_offset
+# end
+
 function define_problem_and_parameters(duration = 50.0)
     αm(V, VT) = -0.32 * (V - VT - 13) / (exp(-(V - VT - 13) / 4) - 1)
     βm(V, VT) = 0.28 * (V - VT - 40) / (exp((V - VT - 40) / 5) - 1)
@@ -175,16 +189,21 @@ function transformed_ode(u_vector, p, t)
     return dus
 end
 
-function generate_transformed_settings()
-    # defining inverse and forward transforms
-    identity =  x -> 1*x
-    deriv_logit = x -> ForwardDiff.derivative(logit, x)
-    deriv_identity = x -> ForwardDiff.derivative(identity, x)
+function generate_transformed_settings(forward_transforms= [], deriv_forward_transforms= [], inverse_transforms= [])
+    
+    if isempty(forward_transforms)
+        
+        # defining inverse and forward transforms
+        identity =  x -> 1*x
+        deriv_logit = x -> ForwardDiff.derivative(logit, x)
+        deriv_identity = x -> ForwardDiff.derivative(identity, x)
 
-    forward_transforms = [identity, logit, logit, logit]
-    deriv_forward_transforms = [deriv_identity, deriv_logit, deriv_logit, deriv_logit]
-    inverse_transforms = [identity, sigmoid, sigmoid, sigmoid]
+        forward_transforms = [identity, logit, logit, logit]
+        deriv_forward_transforms = [deriv_identity, deriv_logit, deriv_logit, deriv_logit]
+        inverse_transforms = [identity, sigmoid, sigmoid, sigmoid]
 
+    end
+    
     # defining the problem
     ode_func, u0, tspan, params = define_problem_and_parameters()
 
@@ -204,3 +223,62 @@ function generate_transformed_settings()
 
     return prob_transformed, forward_transforms, deriv_forward_transforms, inverse_transforms, ode_func
 end 
+
+
+
+function generate_transformed_settings_V(forward_transforms= [], deriv_forward_transforms= [], inverse_transforms= [])
+
+
+    if isempty(forward_transforms)
+        
+        
+        # defining inverse and forward transforms
+        deriv_inverse_sigmoid_V =  x -> ForwardDiff.derivative(inverse_sigmoid_V, x)
+        deriv_logit = x -> ForwardDiff.derivative(logit, x)
+
+        forward_transforms = [inverse_sigmoid_V, logit, logit, logit]
+        deriv_forward_transforms = [deriv_inverse_sigmoid_V, deriv_logit, deriv_logit, deriv_logit]
+        inverse_transforms = [sigmoid_V, sigmoid, sigmoid, sigmoid]
+
+    end
+    # defining the problem
+    ode_func, u0, tspan, params = define_problem_and_parameters()
+
+    # transformed initial value problem
+    u0s_transformed = []
+    for i in 1:length(forward_transforms)
+        forward_transform = forward_transforms[i]
+        u0_transformed = forward_transform(u0[i])
+        if isa(u0_transformed,  Taylor1{Float64})
+            u0_transformed = inv_u(0)
+        end
+        push!(u0s_transformed, u0_transformed)
+    end
+    u0s_transformed = float.(u0s_transformed)
+
+    prob_transformed = ODEProblem(transformed_ode, u0s_transformed, evaltspan, params)
+
+    return prob_transformed, forward_transforms, deriv_forward_transforms, inverse_transforms, ode_func
+end 
+
+
+
+
+
+# function l2_in_time(sol, analytic)
+#     return  map(x ->sqrt.( x .^ 2),  sol - analytic)
+# end
+
+
+# function l2_transformed_in_time(sol, analytic)
+#     errors = []
+#     for i in 1:length(inferse_funcs)
+#         inferse_func = inferse_funcs[i]
+#         sol_channel = inferse_func.(sol_transformed[i,:])
+#         analytic_channel = analytic[i, :]
+#         error = map(x ->sqrt.( x .^ 2), sol_channel - analytic_channel)
+#         push!(errors, error)
+#     end
+
+#     return  errors
+# end
