@@ -34,4 +34,4 @@ xlabel!(p[1], "time, ms")
 xlabel!(p[2], "time, ms")
 xlabel!(p[3], "time, ms")
 
-savefig(p, "./visuals/ioup/ioup-prior-plot.png")
+savefig(p, "./visuals/ioup/ioup-prior-plot.pdf")

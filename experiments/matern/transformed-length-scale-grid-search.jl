@@ -15,8 +15,6 @@ tstops = range(evaltspan..., length=5000)
 exponents = range(-6, stop=5, length=150)
 lengthscales = 10 .^ exponents
 
-matern_prior_transformed_color = "deepskyblue"
-iwp_transformed_prior_color = "forestgreen"
 
 algorithms = []
 n_derivatives = 3
@@ -95,4 +93,4 @@ plot!(p,
         dpi=600)
 display(p)
 
-savefig(p, "./visuals/matern/transformed-length-scale-grid-search.png")
+savefig(p, "./visuals/matern/transformed-length-scale-grid-search.pdf")

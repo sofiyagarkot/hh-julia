@@ -1,4 +1,4 @@
-include("utils.jl")
+include("../../src/utils.jl")
 SMOOTH = DENSE = false
 ADAPTIVE = false
 TO_SAVE = false
@@ -103,7 +103,7 @@ scatter!(
 
 )
 
-path = "./visuals/ioup/rate-grid-search.png"
+path = "./visuals/ioup/rate-grid-search.pdf"
 savefig(p, path)
 
 # print("Minimal error of IOUP(3, rate) at rate $(rates[min_error_index]) is $(min_error)\n")

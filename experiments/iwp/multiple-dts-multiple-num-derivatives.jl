@@ -1,4 +1,3 @@
-using RecursiveArrayTools
 include("../../src/utils.jl")
 using  LaTeXStrings
 
@@ -80,4 +79,4 @@ plot!(p, xaxis=:log10, yaxis=:log10,
         ylabel="tRMSE", dpi=600)
 p
 
-savefig(p, "./visuals/multiple-dts-multiple-num-derivatives.png")
+savefig(p, "./visuals/iwp/multiple-dts-multiple-num-derivatives.pdf")

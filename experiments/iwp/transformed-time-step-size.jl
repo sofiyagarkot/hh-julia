@@ -1,4 +1,3 @@
-using RecursiveArrayTools
 include("../../src/utils.jl")
 using  LaTeXStrings
 
@@ -32,6 +31,8 @@ labels = [
 
 prob = define_problem()
 
+numruns = 20
+time_tmp = Vector{Float64}(undef, numruns)
 
 algorithms = [setup[:alg] for setup in setups]
 
@@ -40,6 +41,7 @@ p = plot(legendfont = font(7), size = (500, 400))
 for i in 1:length(algorithms)
     algorithm = algorithms[i]
     errors = []
+    times = []
 
     for dt in dts
         try
@@ -47,42 +49,58 @@ for i in 1:length(algorithms)
             reference = solve(prob, Vern9(), abstol=1e-9, reltol=1e-9)
             error = l2(solution.u, reference(solution.t))
             push!(errors, error)
+
+            for i in 1:numruns
+                time_tmp[i] =  @elapsed solve(prob_transformed, algorithm, dt=dt, adaptive=false, dense = false)
+            end
+            push!(times, mean(time_tmp))
+
         catch e
             push!(errors, NaN)
-            continue       
+            push!(times, NaN)
+            continue           
         end
     
     end
     
-    plot!(p, dts, errors, label=labels[i], 
+    plot!(p, dts, times, label=labels[i], 
         framestyle=:axes,
         xaxis=:log10, yaxis=:log10,
         color=colors[i],
         fg_legend = :transparent)
 
-    scatter!(p, dts, errors, label="", 
+    scatter!(p, dts, times, label="", 
         framestyle=:axes,
         xaxis=:log10, yaxis=:log10,
         color=colors[i],
         fg_legend = :transparent)
+    display(p)
 end
 
-
-
+p
 prob_transformed, forward_transforms, deriv_forward_transforms, inverse_transforms, ode_func = generate_transformed_settings_V()
 
 for i in 1:length(algorithms)
     algorithm = algorithms[i]
     errors = []
+    times = []
 
     for dt in dts
         try
             solution_transformed = solve(prob_transformed,  algorithm, dt=dt, adaptive=false, dense = false)
             reference = solve(prob, Vern9(), abstol=1e-9, reltol=1e-9, saveat=solution_transformed.t)
             error = l2_transformed(solution_transformed, reference, inverse_transforms)
-            push!(errors, error)    
+            push!(errors, error) 
+            
+            
+            for i in 1:numruns
+                time_tmp[i] =  @elapsed solve(prob_transformed, algorithm, dt=dt, adaptive=false, dense = false)
+            end
+            push!(times, mean(time_tmp))
+
         catch e
             push!(errors, NaN)
+            push!(times, NaN)
             continue
         end
     
@@ -92,26 +110,29 @@ for i in 1:length(algorithms)
     else
         transformed_label = ""
     end
-    plot!(p, dts, errors, label=transformed_label, 
+    plot!(p, dts, times, label=transformed_label, 
         framestyle=:axes,
         linestyle=:dash,
         xaxis=:log10, yaxis=:log10,
         color=colors[i],
         fg_legend = :transparent)
 
-    scatter!(p, dts, errors, label="", 
+    scatter!(p, dts, times, label="", 
         framestyle=:axes,
         xaxis=:log10, yaxis=:log10,
         color=colors[i],
         fg_legend = :transparent)
+
+    display(p)
 end
 
 plot!(p, xaxis=:log10, yaxis=:log10, 
-        legend=:bottomright, legendtitle="Prior of probabilistic solver",
+        legend=:topright, legendtitle="Prior of probabilistic solver",
         legendtitlefontsize=8,
         legendfontsize=7,
-         xlabel=L"$\Delta$t", 
-        ylabel="tRMSE", dpi=600)
+        ylabel="Time, s ", 
+        xlabel="tRMSE", dpi=600)
 p
 
-savefig(p, "./visuals/iwp/transformed-multiple-num-derivatives.pdf")
+savefig(p, "./visuals/iwp/transformed-time-step-size.pdf")
+

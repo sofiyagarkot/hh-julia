@@ -90,7 +90,7 @@ plot!(
         dpi=600
         )
 
-path = "./visuals/Matern-lengthscale-RMSE.png"
+path = "./visuals/matern/length-scale-grid-search.pdf"
 savefig(p, path)
 
 
